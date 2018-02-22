@@ -3,7 +3,7 @@
 def _generate_setup_py(ctx):
     classifiers = ','.join(['"{}"'.format(i) for i in ctx.attr.classifiers])
     install_requires = ','.join(['"{}"'.format(i) for i in ctx.attr.install_requires])
-    setup_py = ctx.actions.declare_file("setup.py")
+    setup_py = ctx.actions.declare_file("{}/setup.py".format(ctx.attr.name))
 
     # create setup.py
     ctx.actions.expand_template(
@@ -23,10 +23,10 @@ def _generate_setup_py(ctx):
 
     return setup_py
 
-def _generate_manifest(ctx, setup_py, package_name):
+def _generate_manifest(ctx, package_name):
     manifest_text = '\n'.join([i for i in ctx.attr.manifest]).format(package_name=package_name)
 
-    manifest = ctx.actions.declare_file("MANIFEST.in", sibling=setup_py)
+    manifest = ctx.actions.declare_file("{}/MANIFEST.in".format(ctx.attr.name))
     ctx.actions.expand_template(
         template=ctx.file._manifest_template,
         output=manifest,
@@ -48,13 +48,9 @@ def _bdist_wheel_impl(ctx):
     backtrack_path = '/'.join(['..' for i in range(0, setup_py_dest_dir_depth)])
 
     setup_py = _generate_setup_py(ctx)
-    manifest = _generate_manifest(ctx, setup_py, package_name)
+    manifest = _generate_manifest(ctx, package_name)
 
-    ctx.actions.run_shell(
-        mnemonic="BuildWheel",
-        outputs=[ctx.outputs.wheel],
-        inputs=ctx.files.srcs + [setup_py, manifest],
-        command="mkdir -p {package_dir} \
+    command = "mkdir -p {package_dir} \
                 && cp --parents -t {package_dir} {source_list} \
                 && cp {setup_py_path} {setup_py_dest_dir} \
                 && cp {manifest_path} {setup_py_dest_dir} \
@@ -62,7 +58,13 @@ def _bdist_wheel_impl(ctx):
                 && cd {setup_py_dest_dir} \
                 && ./setup.py bdist_wheel --bdist-dir {bdist_dir} --dist-dir {dist_dir} \
                 && cd {backtrack_path} \
-                && rm -rf {setup_py_dest_dir}".format(
+                && rm -rf {setup_py_dest_dir}"
+
+    ctx.actions.run_shell(
+        mnemonic="BuildWheel",
+        outputs=[ctx.outputs.wheel],
+        inputs=ctx.files.srcs + [setup_py, manifest],
+        command=command.format(
             source_list=' '.join([src.path for src in ctx.files.srcs]),
             setup_py_path=ctx.outputs.setup_py.path,
             manifest_path=ctx.outputs.manifest.path,
@@ -131,8 +133,8 @@ _bdist_wheel_attrs = {
 
 _bdist_wheel_outputs = {
     "wheel": "%{name}-%{version}-py2-none-%{platform}.whl",
-    "setup_py": "setup.py",
-    "manifest": "MANIFEST.in"
+    "setup_py": "%{name}/setup.py",
+    "manifest": "%{name}/MANIFEST.in"
 }
 
 bdist_wheel = rule(
