@@ -43,22 +43,27 @@ def _bdist_wheel_impl(ctx):
     package_name = build_file_dir.split('/')[-1]
     package_dir = '/'.join([ctx.genfiles_dir.path, work_dir, package_name])
 
-    setup_py_dest_dir = '/'.join([package_dir, '/'.join(build_file_dir.split('/')[:-1])])
+    setup_py_dest_dir_parts = [
+        package_dir,
+        '/'.join(build_file_dir.split('/')[:-1]),
+        ctx.attr.strip_src_prefix.strip('/')
+    ]
+    setup_py_dest_dir = '/'.join(setup_py_dest_dir_parts)
     setup_py_dest_dir_depth = len(setup_py_dest_dir.split('/'))
-    backtrack_path = '/'.join(['..' for i in range(0, setup_py_dest_dir_depth)])
+    backtrack_path = '/'.join(['..' for i in range(0, setup_py_dest_dir_depth) if i])
 
     setup_py = _generate_setup_py(ctx)
     manifest = _generate_manifest(ctx, package_name)
 
-    command = "mkdir -p {package_dir} \
-                && cp --parents -t {package_dir} {source_list} \
-                && cp {setup_py_path} {setup_py_dest_dir} \
-                && cp {manifest_path} {setup_py_dest_dir} \
-                && chmod a+w {setup_py_dest_dir}/setup.py {setup_py_dest_dir}/MANIFEST.in \
-                && cd {setup_py_dest_dir} \
-                && ./setup.py bdist_wheel --bdist-dir {bdist_dir} --dist-dir {dist_dir} \
-                && cd {backtrack_path} \
-                && rm -rf {setup_py_dest_dir}"
+    command = "mkdir -p {package_dir} " \
+              + "&& cp --parents -t {package_dir} {source_list} " \
+              + "&& cp {setup_py_path} {setup_py_dest_dir} " \
+              + "&& cp {manifest_path} {setup_py_dest_dir} " \
+              + "&& chmod a+w {setup_py_dest_dir}/setup.py {setup_py_dest_dir}/MANIFEST.in " \
+              + "&& cd {setup_py_dest_dir} " \
+              + "&& ./setup.py bdist_wheel --bdist-dir {bdist_dir} --dist-dir {dist_dir} " \
+              + "&& cd {backtrack_path} " \
+              + "&& rm -rf {setup_py_dest_dir}"
 
     ctx.actions.run_shell(
         mnemonic="BuildWheel",
@@ -84,6 +89,10 @@ _bdist_wheel_attrs = {
         allow_files=[".py"],
         mandatory=True,
         allow_empty=False
+    ),
+    "strip_src_prefix": attr.string(
+        doc='Path prefix to strip from the files listed in srcs.',
+        mandatory=False
     ),
     "version": attr.string(
         default='0.0.1',
