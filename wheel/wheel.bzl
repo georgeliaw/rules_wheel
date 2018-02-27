@@ -59,9 +59,9 @@ def _bdist_wheel_impl(ctx):
               + "&& cp --parents -t {package_dir} {source_list} " \
               + "&& cp {setup_py_path} {setup_py_dest_dir} " \
               + "&& cp {manifest_path} {setup_py_dest_dir} " \
-              + "&& chmod a+w {setup_py_dest_dir}/setup.py {setup_py_dest_dir}/MANIFEST.in " \
+              + "&& chmod 0777 {setup_py_dest_dir}/setup.py {setup_py_dest_dir}/MANIFEST.in " \
               + "&& cd {setup_py_dest_dir} " \
-              + "&& ./setup.py bdist_wheel --bdist-dir {bdist_dir} --dist-dir {dist_dir} " \
+              + "&& python setup.py bdist_wheel --bdist-dir {bdist_dir} --dist-dir {dist_dir} " \
               + "&& cd {backtrack_path} " \
               + "&& rm -rf {setup_py_dest_dir}"
 
