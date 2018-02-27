@@ -49,8 +49,7 @@ def _bdist_wheel_impl(ctx):
         ctx.attr.strip_src_prefix.strip('/')
     ]
     setup_py_dest_dir = '/'.join(setup_py_dest_dir_parts)
-    setup_py_dest_dir_depth = len(setup_py_dest_dir.split('/'))
-    backtrack_path = '/'.join(['..' for i in range(0, setup_py_dest_dir_depth) if i])
+    backtrack_path = '/'.join(['..' for i in setup_py_dest_dir.split('/') if i])
 
     setup_py = _generate_setup_py(ctx)
     manifest = _generate_manifest(ctx, package_name)
