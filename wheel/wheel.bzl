@@ -90,7 +90,7 @@ _bdist_wheel_attrs = {
         allow_empty=False
     ),
     "strip_src_prefix": attr.string(
-        doc='Path prefix to strip from the files listed in srcs. External sources will require at least `external/` to be stripped',
+        doc='Path prefix to strip from the files listed in srcs if the build rule is not in the root directory of the source files. External sources will require at least `external/` to be stripped',
         mandatory=False
     ),
     "version": attr.string(
