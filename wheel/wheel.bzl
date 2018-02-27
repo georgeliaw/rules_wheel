@@ -55,7 +55,7 @@ def _bdist_wheel_impl(ctx):
     manifest = _generate_manifest(ctx, package_name)
 
     command = "mkdir -p {package_dir} " \
-              + "&& cp --parents -t {package_dir} {source_list} " \
+              + "&& rsync -R {source_list} {package_dir} " \
               + "&& cp {setup_py_path} {setup_py_dest_dir} " \
               + "&& cp {manifest_path} {setup_py_dest_dir} " \
               + "&& chmod 0777 {setup_py_dest_dir}/setup.py {setup_py_dest_dir}/MANIFEST.in " \
