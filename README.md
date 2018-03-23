@@ -10,7 +10,7 @@ Unfortunately Skydoc doesn't currently support the newer `doc` label parameter,
 so check out the Skylark source in [wheel.bzl](wheel/wheel.bzl) for more info.
 
 # Installing and Usage
-Currently requires having `setuptools` installed locally (will work on bringing that into the rule itself).
+Currently requires having `setuptools` and `wheel` installed locally (will work on bringing that into the rule itself).
 
 To use the wheel rule, you will need to add the following into your `WORKSPACE` file:
 ```
