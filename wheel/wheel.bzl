@@ -1,8 +1,8 @@
 """Bazel rule for building a python wheel"""
 
 def _generate_setup_py(ctx):
-    classifiers = ','.join(['"{}"'.format(i) for i in ctx.attr.classifiers])
-    install_requires = ','.join(['"{}"'.format(i) for i in ctx.attr.install_requires])
+    classifiers = '[{}]'.format(','.join(['"{}"'.format(i) for i in ctx.attr.classifiers]))
+    install_requires = '[{}]'.format(','.join(['"{}"'.format(i) for i in ctx.attr.install_requires]))
     setup_py = ctx.actions.declare_file("{}/setup.py".format(ctx.attr.name))
 
     # create setup.py
@@ -13,11 +13,11 @@ def _generate_setup_py(ctx):
             "{name}": ctx.attr.name,
             "{version}": ctx.attr.version,
             "{description}": ctx.attr.description,
-            "{classifiers}": str(classifiers) or str([]),
+            "{classifiers}": classifiers,
             "{platforms}": str(ctx.attr.platform),
             "{package_data}": str(ctx.attr.data),
             "{include_package_data}": str(ctx.attr.include_package_data),
-            "{install_requires}": str(install_requires) or str([])
+            "{install_requires}": install_requires
         }
     )
 
