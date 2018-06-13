@@ -54,15 +54,15 @@ def _bdist_wheel_impl(ctx):
     setup_py = _generate_setup_py(ctx)
     manifest = _generate_manifest(ctx, package_name)
 
-    command = "mkdir -p {package_dir} " \
+    command = "rm -rf {package_dir}" \
+              + "&& mkdir -p {package_dir} " \
               + "&& rsync -R {source_list} {package_dir} " \
               + "&& cp {setup_py_path} {setup_py_dest_dir} " \
               + "&& cp {manifest_path} {setup_py_dest_dir} " \
               + "&& chmod 0777 {setup_py_dest_dir}/setup.py {setup_py_dest_dir}/MANIFEST.in " \
               + "&& cd {setup_py_dest_dir} " \
               + "&& python setup.py bdist_wheel --bdist-dir {bdist_dir} --dist-dir {dist_dir} " \
-              + "&& cd {backtrack_path} " \
-              + "&& rm -rf {setup_py_dest_dir}"
+              + "&& cd {backtrack_path} "
 
     ctx.actions.run_shell(
         mnemonic="BuildWheel",
