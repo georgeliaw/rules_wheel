@@ -47,13 +47,9 @@ def _bdist_wheel_impl(ctx):
     package_dir = ctx.actions.declare_directory(work_dir)
     package_name = package_dir.dirname.split('/')[-1]
 
-    if len(build_file_dir.split('/')) > 1:
-        setup_py_parent_relative_dir = '/'.join(build_file_dir.split('/')[:-1])
-    else:
-        setup_py_parent_relative_dir = build_file_dir
     setup_py_dest_dir = '/'.join([
         package_dir.path,
-        setup_py_parent_relative_dir,
+        '/'.join(build_file_dir.split('/')[:-1]),
         ctx.attr.strip_src_prefix.strip('/')
     ])
     backtrack_path = '/'.join(['..' for i in setup_py_dest_dir.split('/') if i])
