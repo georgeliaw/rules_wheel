@@ -51,7 +51,11 @@ def _bdist_wheel_impl(ctx):
         setup_py_parent_relative_dir = '/'.join(build_file_dir.split('/')[:-1])
     else:
         setup_py_parent_relative_dir = build_file_dir
-    setup_py_dest_dir = package_dir.path + "/" + setup_py_parent_relative_dir
+    setup_py_dest_dir = '/'.join([
+        package_dir.path,
+        setup_py_parent_relative_dir,
+        ctx.attr.strip_src_prefix.strip('/')
+    ])
     backtrack_path = '/'.join(['..' for i in setup_py_dest_dir.split('/') if i])
 
     setup_py = _generate_setup_py(ctx)
