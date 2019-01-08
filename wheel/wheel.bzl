@@ -18,7 +18,8 @@ def _generate_setup_py(ctx):
             "{package_data}": str(ctx.attr.data),
             "{include_package_data}": str(ctx.attr.include_package_data),
             "{install_requires}": install_requires
-        }
+        },
+        is_executable=True
     )
 
     return setup_py
@@ -32,51 +33,63 @@ def _generate_manifest(ctx, package_name):
         output=manifest,
         substitutions={
             "{manifest}": manifest_text
-        }
+        },
+        is_executable=True
     )
 
     return manifest
 
 def _bdist_wheel_impl(ctx):
-    work_dir = "wheel"
+    # use the rule name in the work dir path in case multiple wheels are declared in the same BUILD file
+    work_dir = "{}/wheel".format(ctx.attr.name)
     build_file_dir = ctx.build_file_path.rstrip('/BUILD')
-    package_name = build_file_dir.split('/')[-1]
-    package_dir = '/'.join([ctx.genfiles_dir.path, work_dir, package_name])
 
-    setup_py_dest_dir_parts = [
-        package_dir,
-        '/'.join(build_file_dir.split('/')[:-1]),
-        ctx.attr.strip_src_prefix.strip('/')
-    ]
-    setup_py_dest_dir = '/'.join(setup_py_dest_dir_parts)
+    package_dir = ctx.actions.declare_directory(work_dir)
+    package_name = package_dir.dirname.split('/')[-1]
+
+    if len(build_file_dir.split('/')) > 1:
+        setup_py_parent_relative_dir = '/'.join(build_file_dir.split('/')[:-1])
+    else:
+        setup_py_parent_relative_dir = build_file_dir
+    setup_py_dest_dir = package_dir.path + "/" + setup_py_parent_relative_dir
     backtrack_path = '/'.join(['..' for i in setup_py_dest_dir.split('/') if i])
 
     setup_py = _generate_setup_py(ctx)
     manifest = _generate_manifest(ctx, package_name)
 
-    command = "rm -rf {package_dir}" \
-              + "&& mkdir -p {package_dir} " \
+    source_list = ' '.join([src.path for src in ctx.files.srcs])
+    transitive_files = depset([setup_py, manifest])
+    runfiles = ctx.runfiles(
+        collect_default=True,
+        transitive_files=transitive_files,
+    )
+
+    ctx.actions.run_shell(
+        mnemonic="CreateWorkDir",
+        outputs=[package_dir],
+        inputs=[],
+        command="mkdir -p {package_dir}".format(package_dir=package_dir.path)
+    )
+
+    command = "chmod 0775 {package_dir} " \
               + "&& rsync -R {source_list} {package_dir} " \
               + "&& cp {setup_py_path} {setup_py_dest_dir} " \
               + "&& cp {manifest_path} {setup_py_dest_dir} " \
-              + "&& chmod 0777 {setup_py_dest_dir}/setup.py {setup_py_dest_dir}/MANIFEST.in " \
               + "&& cd {setup_py_dest_dir} " \
-              + "&& python setup.py bdist_wheel --bdist-dir {bdist_dir} --dist-dir {dist_dir} " \
-              + "&& cd {backtrack_path} "
+              + "&& python setup.py bdist_wheel --dist-dir {dist_dir} "
 
     ctx.actions.run_shell(
         mnemonic="BuildWheel",
         outputs=[ctx.outputs.wheel],
-        inputs=ctx.files.srcs + [setup_py, manifest],
+        inputs=runfiles.files + [package_dir],
         command=command.format(
-            source_list=' '.join([src.path for src in ctx.files.srcs]),
+            source_list=source_list,
             setup_py_path=ctx.outputs.setup_py.path,
             manifest_path=ctx.outputs.manifest.path,
-            package_dir=package_dir,
+            package_dir=package_dir.path,
             setup_py_dest_dir=setup_py_dest_dir,
-            bdist_dir=package_dir + "/build",
+            bdist_dir=package_dir.path + "/build",
             dist_dir=backtrack_path + "/" + ctx.outputs.wheel.dirname,
-            backtrack_path=backtrack_path
         )
     )
 
