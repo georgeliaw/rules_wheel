@@ -58,11 +58,6 @@ def _bdist_wheel_impl(ctx):
     manifest = _generate_manifest(ctx, package_name)
 
     source_list = ' '.join([src.path for src in ctx.files.srcs])
-    transitive_files = depset([setup_py, manifest])
-    runfiles = ctx.runfiles(
-        collect_default=True,
-        transitive_files=transitive_files,
-    )
 
     ctx.actions.run_shell(
         mnemonic="CreateWorkDir",
@@ -81,7 +76,7 @@ def _bdist_wheel_impl(ctx):
     ctx.actions.run_shell(
         mnemonic="BuildWheel",
         outputs=[ctx.outputs.wheel],
-        inputs=runfiles.files + [package_dir],
+        inputs=[src for src in ctx.files.srcs] + [package_dir, setup_py, manifest],
         command=command.format(
             source_list=source_list,
             setup_py_path=ctx.outputs.setup_py.path,
