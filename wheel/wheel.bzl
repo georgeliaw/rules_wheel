@@ -71,7 +71,7 @@ def _bdist_wheel_impl(ctx):
               + "&& cp {setup_py_path} {setup_py_dest_dir} " \
               + "&& cp {manifest_path} {setup_py_dest_dir} " \
               + "&& cd {setup_py_dest_dir} " \
-              + "&& python setup.py bdist_wheel --dist-dir {dist_dir} "
+              + "&& python setup.py bdist_wheel --universal --dist-dir {dist_dir} "
 
     ctx.actions.run_shell(
         mnemonic="BuildWheel",
@@ -148,7 +148,7 @@ _bdist_wheel_attrs = {
 }
 
 _bdist_wheel_outputs = {
-    "wheel": "%{name}-%{version}-py2-none-%{platform}.whl",
+    "wheel": "%{name}-%{version}-py2.py3-none-%{platform}.whl",
     "setup_py": "%{name}/setup.py",
     "manifest": "%{name}/MANIFEST.in"
 }
