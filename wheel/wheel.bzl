@@ -76,7 +76,7 @@ def _bdist_wheel_impl(ctx):
     ctx.actions.run_shell(
         mnemonic = "BuildWheel",
         outputs = [ctx.outputs.wheel],
-        inputs = [src for src in ctx.files.srcs] + [package_dir, setup_py, manifest],
+        inputs = ctx.files.srcs + [package_dir, setup_py, manifest],
         command = command.format(
             source_list = source_list,
             setup_py_path = ctx.outputs.setup_py.path,
