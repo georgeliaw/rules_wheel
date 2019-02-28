@@ -79,8 +79,8 @@ def _bdist_wheel_impl(ctx):
         inputs = ctx.files.srcs + [package_dir, setup_py, manifest],
         command = command.format(
             source_list = source_list,
-            setup_py_path = ctx.outputs.setup_py.path,
-            manifest_path = ctx.outputs.manifest.path,
+            setup_py_path = setup_py.path,
+            manifest_path = manifest.path,
             package_dir = package_dir.path,
             setup_py_dest_dir = setup_py_dest_dir,
             bdist_dir = package_dir.path + "/build",
@@ -149,8 +149,6 @@ _bdist_wheel_attrs = {
 
 _bdist_wheel_outputs = {
     "wheel": "%{name}-%{version}-py2.py3-none-%{platform}.whl",
-    "setup_py": "%{name}/setup.py",
-    "manifest": "%{name}/MANIFEST.in",
 }
 
 bdist_wheel = rule(
